@@ -6,14 +6,24 @@ use crate::weak_learner::WeakLearner;
 use crate::weighted_data::WeightedData;
 use pyo3::prelude::*;
 
+/// Representa o algoritmo AdaBoost que usa como classificadores fracos decision stumps.
 #[pyclass]
 pub struct AdaBoost {
+    /// Número de classificadores fracos usados para fazer a predição.
     pub n_estimators: usize,
+    /// Classificadores fracos usados para fazer a predição.
     pub weak_learners: Vec<WeakLearner>,
 }
 
 #[pymethods]
 impl AdaBoost {
+    /// Cria um novo algoritmo AdaBoost.
+    /// 
+    /// # Arguments
+    /// * `n_estimators` - Número de classificadores fracos usados para fazer a predição.
+    /// 
+    /// # Returns
+    /// Novo algoritmo AdaBoost.
     #[new]
     pub fn new(n_estimators: usize) -> AdaBoost {
         AdaBoost {
@@ -41,6 +51,11 @@ impl AdaBoost {
         return samples;
     }
 
+    /// Treina o algoritmo AdaBoost clássico.
+    /// 
+    /// # Arguments
+    /// * `x` - Array numpy com as features dos dados de treino.
+    /// * `y` - Array numpy com os labels dos dados de treino.
     pub fn fit(&mut self, py: Python, x: PyReadonlyArray2<i64>, y: PyReadonlyArray1<i64>) -> PyResult<()>{
         let samples = self.extractSamples(x, y);
         let mut weighted_data = WeightedData::new(samples);
@@ -73,6 +88,15 @@ impl AdaBoost {
         }
     }
 
+    /// Faz a predição com base em um array numpy. Como no algoritmo clássico a predição é
+    /// feita com base na votação de diferentes classificadores fracos, sendo o valor final
+    /// 0 se a soma das diferentes predições ponderadas por alpha for negativa e 1 caso contrário.
+    /// 
+    /// # Arguments
+    /// * `x` - Array numpy com as features.
+    /// 
+    /// # Returns
+    /// Array numpy com as predições.
     pub fn predict(&self, py: Python, x: PyReadonlyArray2<i64>) -> PyResult<Py<PyArray1<i64>>> {
         let x: Array2<i64> = x.as_array().to_owned();
         let mut predictions: Vec<i64> = Vec::new();
@@ -85,8 +109,6 @@ impl AdaBoost {
             predictions.push(predicted_label);
         }
 
-        // let gil = pyo3::Python::acquire_gil();
-        // let py = gil.python();
         let predictions = PyArray1::from_vec(py, predictions);
         Ok(predictions.into_py(py))
     }

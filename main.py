@@ -1,56 +1,55 @@
 from adaboost_bindings import AdaBoost # type: ignore
 import numpy as np
-from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import KFold
 import matplotlib.pyplot as plt
-import time
+import os
+import pandas as pd
 
-data = np.loadtxt('mnist.txt', delimiter=',')
-X = data[:, 1:]
-y = data[:, 0]
+data = None
+with open('tic-tac-toe.txt') as f:
+    data = f.read()
+    
+data = data.split('\n')
+data = [row.split(',') for row in data]
+data = pd.DataFrame(data)
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0)
+data = data.replace('b', 0)
+data = data.replace('x', 1)
+data = data.replace('o', 2)
+data = data.replace('positive', 1)
+data = data.replace('negative', 0)
+data = data.astype(int)
 
-n_estimators_range = np.arange(1, 11)
-sklearn_runtimes = []
-rust_runtimes = []
-sklearn_accuracies = []
-rust_accuracies = []
+X = data.iloc[:, :-1]
+y = data.iloc[:, -1]
 
-for n_estimators in n_estimators_range:
-    # Create and fit an AdaBoost classifier from scikit-learn
-    sklearn_clf = AdaBoostClassifier(n_estimators=n_estimators)
-    start_time = time.time()
-    sklearn_clf.fit(X_train, y_train)
-    sklearn_runtimes.append(time.time() - start_time)
+n_estimators_range = np.arange(1, 9)
+accuracies = dict()
 
-    # Create and fit an AdaBoost classifier from our Rust implementation
-    rust_clf = AdaBoost(n_estimators)
-    start_time = time.time()
-    rust_clf.fit(X_train, y_train)
-    rust_runtimes.append(time.time() - start_time)
+kfold = KFold(n_splits=5, shuffle=True, random_state=0)
+for train_index, test_index in kfold.split(X):
+    X_train, X_test = X.iloc[train_index].values, X.iloc[test_index].values
+    y_train, y_test = y.iloc[train_index].values, y.iloc[test_index].values
 
-    # Make predictions on the test set with both classifiers
-    sklearn_y_pred = sklearn_clf.predict(X_test)
-    rust_y_pred = rust_clf.predict(X_test)
+    for n_estimators in n_estimators_range:
+        clf = AdaBoost(n_estimators)
+        clf.fit(X_train, y_train)
+        y_pred = clf.predict(X_test)
+        accuracy = accuracy_score(y_test, y_pred)
+        accuracies[n_estimators] = accuracies.get(n_estimators, []) + [accuracy]
 
-    # Compute the accuracy of both classifiers
-    sklearn_accuracies.append(accuracy_score(y_test, sklearn_y_pred))
-    rust_accuracies.append(accuracy_score(y_test, rust_y_pred))
+accuracies = {k: np.mean(v) for k, v in accuracies.items()}
 
-# Plot the runtime comparison
-plt.plot(n_estimators_range, sklearn_runtimes, label="scikit-learn")
-plt.plot(n_estimators_range, rust_runtimes, label="Rust")
-plt.xlabel("Number of estimators")
-plt.ylabel("Runtime (s)")
+os.makedirs("plots", exist_ok=True)
+
+x = list(accuracies.keys())
+y = list(accuracies.values())
+plt.plot(x, y)
+plt.xlabel("Número de estimadores")
+plt.ylabel("Acurácia")
 plt.legend()
-plt.show()
-
-# Plot the accuracy comparison
-plt.plot(n_estimators_range, sklearn_accuracies, label="scikit-learn")
-plt.plot(n_estimators_range, rust_accuracies, label="Rust")
-plt.xlabel("Number of estimators")
-plt.ylabel("Accuracy")
-plt.legend()
-plt.show()
+plt.grid()
+# plt.ylim(0.5, 1)
+plt.savefig("plots/acuracia.png")
+plt.clf()

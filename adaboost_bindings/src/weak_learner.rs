@@ -7,8 +7,11 @@ use pyo3::prelude::*;
 #[derive(Clone)]
 pub struct WeakLearner {
     pub feature_index: usize,
-    pub threshold: f64,
-    pub polarity: i32,
+    pub threshold: i64,
+    pub polarity: i64,
+
+    pub error: f64,
+    pub alpha: f64,
 }
 
 #[pymethods]
@@ -17,8 +20,10 @@ impl WeakLearner {
     pub fn new() -> WeakLearner {
         WeakLearner {
             feature_index: 0,
-            threshold: 0.0,
+            threshold: 0,
             polarity: 1,
+            error: 0.5,
+            alpha: 0.0,
         }
     }
 
@@ -28,30 +33,42 @@ impl WeakLearner {
         let mut min_error = f64::INFINITY;
 
         for feature_index in 0..n_features {
-            for threshold in [0.0, 1.0].iter() {
+            let min_categorial_feature_value = weighted_data.samples.iter()
+                .map(|s| s.features[feature_index])
+                .min().unwrap();
+            
+            let max_categorical_feature_value = weighted_data.samples.iter()
+                .map(|s| s.features[feature_index])
+                .max().unwrap();
+
+            for threshold in min_categorial_feature_value..=max_categorical_feature_value {
                 for polarity in [-1, 1].iter() {
+
                     let mut error = 0.0;
                     let mut class_counts = vec![0; n_classes as usize];
                     for sample in &weighted_data.samples {
-                        let predicted_label = if (sample.features[feature_index] - threshold) * (*polarity as f64) >= 0.0 { 1 } else { 0 };
+                        let predicted_label = if (sample.features[feature_index] - threshold) * (*polarity) >= 0 { 1 } else { 0 };
                         if predicted_label != sample.label {
                             error += sample.getWeight();
                         }
                         class_counts[predicted_label as usize] += 1;
                     }
 
-                    if error < min_error {
+                    if error <= min_error {
                         min_error = error;
                         self.feature_index = feature_index;
-                        self.threshold = *threshold;
+                        self.threshold = threshold;
                         self.polarity = *polarity;
                     }
                 }
             }
         }
+
+        self.error = weighted_data.computeWeightedErrorRate(&self);
+        self.alpha = 0.5 * ((1.0 - self.error)/ self.error).log10();
     }
 
-    pub fn predict(&self, features: Vec<f64>) -> i32 {
-        if (features[self.feature_index] - self.threshold) * (self.polarity as f64) >= 0.0 { 1 } else { 0 }
+    pub fn predict(&self, features: Vec<i64>) -> i64 {
+        if (features[self.feature_index] - self.threshold) * (self.polarity) >= 0 { 1 } else { 0 }
     }
 }

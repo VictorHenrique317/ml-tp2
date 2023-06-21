@@ -16,9 +16,11 @@ impl WeightedData {
         WeightedData { samples }
     }
 
-    pub fn computeWeightedErrorRate(&self, weak_learner: WeakLearner) -> f64 {
+    pub fn computeWeightedErrorRate(&self,  weak_learner: &WeakLearner) -> f64 {
         let mut error = 0.0;
+        let mut i = 0;
         for sample in &self.samples {
+            i+=1;
             let predicted_label = weak_learner.predict(sample.features.clone());
             if predicted_label != sample.label {
                 error += sample.getWeight();
@@ -27,13 +29,13 @@ impl WeightedData {
         error
     }
 
-    pub fn updateWeights(&mut self, weak_learner: &WeakLearner, alpha: f64) {
+    pub fn updateWeights(&mut self, weak_learner: &WeakLearner) {
         for sample in &mut self.samples {
             let predicted_label = weak_learner.predict(sample.features.clone());
             if predicted_label == sample.label {
-                sample.setWeight(sample.getWeight() * (-alpha).exp());
+                sample.setWeight(sample.getWeight() * (-weak_learner.alpha).exp());
             } else {
-                sample.setWeight(sample.getWeight() * alpha.exp());
+                sample.setWeight(sample.getWeight() * weak_learner.alpha.exp());
             }
         }
 

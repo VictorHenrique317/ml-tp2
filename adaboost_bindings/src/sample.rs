@@ -1,16 +1,16 @@
 use pyo3::prelude::*;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[pyclass]
 pub struct Sample {
-    pub features: Vec<f64>,
-    pub label: i32,
+    pub features: Vec<i64>,
+    pub label: i64,
     weight: f64,
 }
 #[pymethods]
 impl Sample {
     #[new]
-    pub fn new(features: Vec<f64>, label: i32, weight: f64) -> Sample {
+    pub fn new(features: Vec<i64>, label: i64, weight: f64) -> Sample {
         Sample { features, label, weight }
     }
 

@@ -24,7 +24,7 @@ data = data.astype(int)
 X = data.iloc[:, :-1]
 y = data.iloc[:, -1]
 
-n_estimators_range = np.arange(1, 40)
+n_estimators_range = np.arange(1, 200)
 accuracies = dict()
 
 kfold = KFold(n_splits=5, shuffle=True, random_state=0)

@@ -40,8 +40,8 @@ impl AdaBoost {
 
         for (i, row) in x.axis_iter(Axis(0)).enumerate() {
             let features: Vec<i64> = row.iter()
-            .map(|x_n| *x_n)
-            .collect();
+                .map(|x_n| *x_n)
+                .collect();
             let label: i64 = y[i];
 
             let sample = Sample::new(features, label, weight);
@@ -75,7 +75,7 @@ impl AdaBoost {
     fn singlePredict(&self, features: Vec<i64>) -> i64 {
         let mut sign_h: f64 = 0.0;
         for weak_learner in self.weak_learners.iter() {
-            let mut predicted_label = weak_learner.predict(features.clone());
+            let predicted_label = weak_learner.predict(features.clone());
             
             sign_h += weak_learner.alpha  * predicted_label as f64;
         }

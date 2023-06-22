@@ -106,16 +106,6 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::vec::Vec;
 <span class="kw">use </span><span class="kw">crate</span>::weighted_data::WeightedData;
 <span class="kw">use </span><span class="kw">crate</span>::sample::Sample;
@@ -128,13 +118,8 @@
 </span><span class="kw">pub struct </span>WeakLearner {
     <span class="doccomment">/// Indice da feature que será utilizada como critério de decisão.
     </span><span class="kw">pub </span>feature_index: usize,
-    <span class="doccomment">/// Valor do threshold que para qual a feature será comparada. Se a feature for maior que o
-    /// threshold, o dado será classificado como 1, caso contrário, será classificado como 0.
-    </span><span class="kw">pub </span>threshold: i64,
-    <span class="doccomment">/// Polaridade da decisão. Se for 1, o dado será classificado como 1 se for maior que o threshold,
-    /// caso contrário, será classificado como 0. Se for -1, o dado será classificado como 1 se for
-    /// menor que o threshold, caso contrário, será classificado como 0.
-    </span><span class="kw">pub </span>polarity: i64,
+    <span class="kw">pub </span>feature_target_value: i64,
+    <span class="kw">pub </span>prediction: i64,
 
     <span class="doccomment">/// Erro do classificador fraco.
     </span><span class="kw">pub </span>error: f64,
@@ -150,31 +135,16 @@
     </span><span class="attribute">#[new]
     </span><span class="kw">pub fn </span>new() -&gt; WeakLearner {
         WeakLearner {
-            feature_index: -<span class="number">1</span>,
-            threshold: <span class="number">0</span>,
-            polarity: <span class="number">0</span>,
+            feature_index: usize::MAX,
+            feature_target_value: <span class="number">0</span>,
+            prediction: <span class="number">0</span>,
             error: <span class="number">0.0</span>,
             alpha: <span class="number">0.0</span>,
         }
     }
 
-    <span class="doccomment">/// Treina o classificador fraco com os dados passados. Nessa função os valores de feature_index,
-    /// threshold, polarity são definidos. Esses são escolhidos como sendo a combinação
-    /// de valores que minimiza o erro dos dados passados, essa busca é exaustiva e testa todas as possibilidades.
-    /// 
-    /// O erro é definido como a soma dos pesos das samples que foram classificadas incorretamente.
-    /// A classificação é feita utilizando o feature_index, threshold e polarity definidos no treinamento.
-    /// Ela é definida como 1 se a feature for maior que o threshold e a polaridade for 1 ou se a feature
-    /// for menor que o threshold e a polaridade for -1. Caso contrário, a classificação é definida como 0.
-    /// 
-    /// Depois de ter os valores de feature_index, threshold, polarity definidos, o erro e o peso do classificador
-    /// fraco são calculados.
-    /// 
-    /// # Arguments
-    /// * `weighted_data` - Samples que serão utilizadas para treinar o classificador fraco.
-    </span><span class="kw">pub fn </span>fit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, weighted_data: WeightedData) {
+    <span class="kw">pub fn </span>fit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, weighted_data: WeightedData) {
         <span class="kw">let </span>n_features = weighted_data.samples[<span class="number">0</span>].features.len();
-        <span class="kw">let </span>n_classes = weighted_data.samples.iter().map(|s| s.label).max().unwrap() + <span class="number">1</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>min_error = f64::INFINITY;
 
         <span class="kw">for </span>feature_index <span class="kw">in </span><span class="number">0</span>..n_features {
@@ -186,25 +156,41 @@
                 .map(|s| s.features[feature_index])
                 .max().unwrap();
 
-            <span class="kw">for </span>threshold <span class="kw">in </span>min_categorial_feature_value..=max_categorical_feature_value {
-                <span class="kw">for </span>polarity <span class="kw">in </span>[-<span class="number">1</span>, <span class="number">1</span>].iter() {
+            <span class="kw">for </span>feature_value <span class="kw">in </span>min_categorial_feature_value..=max_categorical_feature_value {
 
-                    <span class="kw">let </span><span class="kw-2">mut </span>error = <span class="number">0.0</span>;
-                    <span class="kw">let </span><span class="kw-2">mut </span>class_counts = <span class="macro">vec!</span>[<span class="number">0</span>; n_classes <span class="kw">as </span>usize];
-                    <span class="kw">for </span>sample <span class="kw">in </span><span class="kw-2">&amp;</span>weighted_data.samples {
-                        <span class="kw">let </span>predicted_label = <span class="kw">if </span>(sample.features[feature_index] - threshold) * (<span class="kw-2">*</span>polarity) &gt;= <span class="number">0 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>};
-                        <span class="kw">if </span>predicted_label != sample.label {
-                            error += sample.getWeight();
-                        }
-                        class_counts[predicted_label <span class="kw">as </span>usize] += <span class="number">1</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>error1 = <span class="number">0.0</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>error2 = <span class="number">0.0</span>;
+                <span class="kw">for </span>sample <span class="kw">in </span><span class="kw-2">&amp;</span>weighted_data.samples{
+                    
+                    <span class="kw">let </span><span class="kw-2">mut </span>prediction = <span class="number">1</span>;
+                    <span class="kw">if </span>sample.features[feature_index] != feature_value {
+                        prediction = -<span class="number">1</span>;
+                    }
+                    <span class="kw">if </span>prediction != sample.label {
+                        error1 += sample.getWeight();
                     }
 
-                    <span class="kw">if </span>error &lt;= min_error {
-                        min_error = error;
-                        <span class="self">self</span>.feature_index = feature_index;
-                        <span class="self">self</span>.threshold = threshold;
-                        <span class="self">self</span>.polarity = <span class="kw-2">*</span>polarity;
+                    <span class="kw">let </span><span class="kw-2">mut </span>prediction = -<span class="number">1</span>;
+                    <span class="kw">if </span>sample.features[feature_index] != feature_value {
+                        prediction = <span class="number">1</span>;
                     }
+                    <span class="kw">if </span>prediction != sample.label {
+                        error2 += sample.getWeight();
+                    }
+                }
+
+                <span class="kw">if </span>error1 &lt; min_error {
+                    <span class="self">self</span>.feature_index = feature_index;
+                    <span class="self">self</span>.feature_target_value = feature_value;
+                    <span class="self">self</span>.prediction = <span class="number">1</span>;
+                    min_error = error1;
+                }
+
+                <span class="kw">if </span>error2 &lt; min_error {
+                    <span class="self">self</span>.feature_index = feature_index;
+                    <span class="self">self</span>.feature_target_value = feature_value;
+                    <span class="self">self</span>.prediction = -<span class="number">1</span>;
+                    min_error = error2;
                 }
             }
         }
@@ -213,25 +199,19 @@
         <span class="self">self</span>.alpha = <span class="number">0.5 </span>* ((<span class="number">1.0 </span>- <span class="self">self</span>.error)/ <span class="self">self</span>.error).log10();
     }
 
-    <span class="doccomment">/// Classifica um dado levando em consideração que o classificador fraco já foi treinado.
-    /// A classificação é feita utilizando o feature_index, threshold e polarity definidos no treinamento.
-    /// Ela é definida como 1 se a feature for maior que o threshold e a polaridade for 1 ou se a feature
-    /// for menor que o threshold e a polaridade for -1. Caso contrário, a classificação é definida como 0.
-    /// 
-    /// # Arguments
-    /// * `features` - Vetor de features X do dado que será classificado.
-    /// 
-    /// # Returns
-    /// Classificação do dado, 0 ou 1.
-    /// 
-    /// # Panics
-    /// Se o classificador fraco não foi treinado.
-    </span><span class="kw">pub fn </span>predict(<span class="kw-2">&amp;</span><span class="self">self</span>, features: Vec&lt;i64&gt;) -&gt; i64 {
-        <span class="kw">if </span>(<span class="self">self</span>.feature_index == -<span class="number">1</span>){
+    
+    <span class="kw">pub fn </span>predict(<span class="kw-2">&amp;</span><span class="self">self</span>, features: Vec&lt;i64&gt;) -&gt; i64 {
+        <span class="kw">if </span><span class="self">self</span>.feature_index == usize::MAX{
             <span class="macro">panic!</span>(<span class="string">&quot;WeakLearner not trained&quot;</span>);
         }
 
-        <span class="kw">if </span>(features[<span class="self">self</span>.feature_index] - <span class="self">self</span>.threshold) * (<span class="self">self</span>.polarity) &gt;= <span class="number">0 </span>{ <span class="number">1 </span>} <span class="kw">else </span>{ <span class="number">0 </span>}
+        <span class="kw">let </span>feature_value = features[<span class="self">self</span>.feature_index];
+
+        <span class="kw">if </span>feature_value == <span class="self">self</span>.feature_target_value{
+            <span class="kw">return </span><span class="self">self</span>.prediction;
+        }
+
+        <span class="kw">return </span><span class="self">self</span>.prediction * -<span class="number">1</span>;
     }
 }
 </code></pre></div>

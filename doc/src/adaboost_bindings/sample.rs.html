@@ -52,13 +52,13 @@
 
 <span class="doccomment">/// Representa um dado, com suas features, label, e seu peso.
 /// As features são representadas por um vetor de inteiros, e o label só pode ser
-/// 1 ou 0.
+/// 1 ou -1.
 </span><span class="attribute">#[derive(Clone, Debug)]
 #[pyclass]
 </span><span class="kw">pub struct </span>Sample {
     <span class="doccomment">/// Vetor de features X do dado.
     </span><span class="kw">pub </span>features: Vec&lt;i64&gt;,
-    <span class="doccomment">/// Label y do dado, que só pode ser 1 ou 0.
+    <span class="doccomment">/// Label y do dado, que só pode ser 1 ou -1.
     </span><span class="kw">pub </span>label: i64,
     <span class="doccomment">/// Peso do dado.
     </span>weight: f64,
@@ -76,8 +76,8 @@
     /// Novo dado.
     </span><span class="attribute">#[new]
     </span><span class="kw">pub fn </span>new(features: Vec&lt;i64&gt;, label: i64, weight: f64) -&gt; Sample {
-        <span class="kw">if </span>label != <span class="number">0 </span>&amp;&amp; label != <span class="number">1 </span>{
-            <span class="macro">panic!</span>(<span class="string">&quot;Label must be 0 or 1&quot;</span>);
+        <span class="kw">if </span>label != -<span class="number">1 </span>&amp;&amp; label != <span class="number">1 </span>{
+            <span class="macro">panic!</span>(<span class="string">&quot;Label must be -1 or 1&quot;</span>);
         }
         Sample { features, label, weight }
     }

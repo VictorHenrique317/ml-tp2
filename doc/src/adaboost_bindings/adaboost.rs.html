@@ -108,11 +108,6 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::vec::Vec;
 <span class="kw">use </span>numpy::ndarray::{Array2, Axis, Array1};
 <span class="kw">use </span>numpy::{PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyArray1};
@@ -155,8 +150,8 @@
 
         <span class="kw">for </span>(i, row) <span class="kw">in </span>x.axis_iter(Axis(<span class="number">0</span>)).enumerate() {
             <span class="kw">let </span>features: Vec&lt;i64&gt; = row.iter()
-            .map(|x_n| <span class="kw-2">*</span>x_n)
-            .collect();
+                .map(|x_n| <span class="kw-2">*</span>x_n)
+                .collect();
             <span class="kw">let </span>label: i64 = y[i];
 
             <span class="kw">let </span>sample = Sample::new(features, label, weight);
@@ -190,17 +185,12 @@
     <span class="kw">fn </span>singlePredict(<span class="kw-2">&amp;</span><span class="self">self</span>, features: Vec&lt;i64&gt;) -&gt; i64 {
         <span class="kw">let </span><span class="kw-2">mut </span>sign_h: f64 = <span class="number">0.0</span>;
         <span class="kw">for </span>weak_learner <span class="kw">in </span><span class="self">self</span>.weak_learners.iter() {
-            <span class="kw">let </span><span class="kw-2">mut </span>predicted_label = weak_learner.predict(features.clone());
-            <span class="kw">if </span>predicted_label == <span class="number">0 </span>{ predicted_label = -<span class="number">1</span>; }
+            <span class="kw">let </span>predicted_label = weak_learner.predict(features.clone());
             
             sign_h += weak_learner.alpha  * predicted_label <span class="kw">as </span>f64;
         }
 
-        <span class="kw">if </span>sign_h &gt; <span class="number">0.0 </span>{
-            <span class="kw">return </span><span class="number">1</span>;
-        } <span class="kw">else </span>{
-            <span class="kw">return </span><span class="number">0</span>;
-        }
+        <span class="kw">return </span>sign_h.signum() <span class="kw">as </span>i64;
     }
 
     <span class="doccomment">/// Faz a predição com base em um array numpy. Como no algoritmo clássico a predição é

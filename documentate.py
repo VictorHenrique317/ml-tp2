@@ -2,6 +2,7 @@ import os
 import re
 
 os.system("rm -rf adaboost_bindings/target/doc")
+os.system("rm -rf doc")
 os.system("cd adaboost_bindings && cargo doc --no-deps && cd ..")
 
 html_base_path = "adaboost_bindings/target/doc/adaboost_bindings/"
@@ -38,3 +39,4 @@ for html_sub_path in html_sub_paths:
         f.write(content)
 
 os.system("mv adaboost_bindings/target/doc/ doc/")
+os.system("""echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=adaboost_bindings/index.html"></head><body></body></html>' > doc/index.html""")

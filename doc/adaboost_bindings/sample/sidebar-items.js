@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Sample","Representa um dado, com suas features, label, e seu peso. As features são representadas por um vetor de inteiros, e o label só pode ser 1 ou 0."]]};
+window.SIDEBAR_ITEMS = {"struct":[["Sample","Representa um dado, com suas features, label, e seu peso. As features são representadas por um vetor de inteiros, e o label só pode ser 1 ou -1."]]};

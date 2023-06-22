@@ -29,7 +29,7 @@ n_estimators_range = np.arange(1, 500)
 accuracies = dict()
 
 index = 0
-kfold = KFold(n_splits=5, shuffle=True, random_state=0)
+kfold = KFold(n_splits=5, shuffle=True, random_state=1)
 for train_index, test_index in kfold.split(X):
     index += 1
     print(f"=== KFold: {index} ===")

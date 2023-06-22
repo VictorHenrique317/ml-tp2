@@ -9,6 +9,7 @@ use pyo3::prelude::*;
 /// Representa o algoritmo AdaBoost que usa como classificadores fracos decision stumps.
 #[pyclass]
 pub struct AdaBoost {
+    pub learning_rate: f64,
     /// Número de classificadores fracos usados para fazer a predição.
     pub n_estimators: usize,
     /// Classificadores fracos usados para fazer a predição.
@@ -25,8 +26,9 @@ impl AdaBoost {
     /// # Returns
     /// Novo algoritmo AdaBoost.
     #[new]
-    pub fn new(n_estimators: usize) -> AdaBoost {
+    pub fn new(n_estimators: usize, learning_rate: f64) -> AdaBoost {
         AdaBoost {
+            learning_rate: learning_rate,
             n_estimators,
             weak_learners: Vec::new(),
         }
@@ -62,7 +64,7 @@ impl AdaBoost {
 
         for i in 0..self.n_estimators {
             
-            let mut weak_learner = WeakLearner::new();
+            let mut weak_learner = WeakLearner::new(self.learning_rate);
             weak_learner.fit(weighted_data.clone());
 
             weighted_data.updateWeights(&weak_learner);

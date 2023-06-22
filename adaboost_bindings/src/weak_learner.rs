@@ -13,6 +13,7 @@ pub struct WeakLearner {
     pub feature_target_value: i64,
     pub prediction: i64,
 
+    pub learning_rate: f64,
     /// Erro do classificador fraco.
     pub error: f64,
     /// Peso do classificador fraco.
@@ -25,11 +26,12 @@ impl WeakLearner {
     /// # Returns
     /// Novo classificador fraco.
     #[new]
-    pub fn new() -> WeakLearner {
+    pub fn new(learning_rate: f64) -> WeakLearner {
         WeakLearner {
             feature_index: usize::MAX,
             feature_target_value: 0,
             prediction: 0,
+            learning_rate: learning_rate,
             error: 0.0,
             alpha: 0.0,
         }
@@ -88,7 +90,7 @@ impl WeakLearner {
         }
 
         self.error = weighted_data.computeWeightedErrorRate(&self);
-        self.alpha = 0.5 * ((1.0 - self.error)/ self.error).log10();
+        self.alpha = self.learning_rate * ((1.0 - self.error)/ self.error).log10();
     }
 
     

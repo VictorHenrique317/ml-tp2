@@ -76,16 +76,11 @@ impl AdaBoost {
         let mut sign_h: f64 = 0.0;
         for weak_learner in self.weak_learners.iter() {
             let mut predicted_label = weak_learner.predict(features.clone());
-            if predicted_label == 0 { predicted_label = -1; }
             
             sign_h += weak_learner.alpha  * predicted_label as f64;
         }
 
-        if sign_h > 0.0 {
-            return 1;
-        } else {
-            return 0;
-        }
+        return sign_h.signum() as i64;
     }
 
     /// Faz a predição com base em um array numpy. Como no algoritmo clássico a predição é

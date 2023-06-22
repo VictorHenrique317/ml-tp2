@@ -1,3 +1,4 @@
+from sklearn.ensemble import AdaBoostClassifier
 from adaboost_bindings import AdaBoost # type: ignore
 import numpy as np
 from sklearn.metrics import accuracy_score
@@ -18,22 +19,31 @@ data = data.replace('b', 0)
 data = data.replace('x', 1)
 data = data.replace('o', 2)
 data = data.replace('positive', 1)
-data = data.replace('negative', 0)
+data = data.replace('negative', -1)
 data = data.astype(int)
 
 X = data.iloc[:, :-1]
 y = data.iloc[:, -1]
 
-n_estimators_range = np.arange(1, 200)
+n_estimators_range = np.arange(1, 500)
 accuracies = dict()
 
+index = 0
 kfold = KFold(n_splits=5, shuffle=True, random_state=0)
 for train_index, test_index in kfold.split(X):
+    index += 1
+    print(f"=== KFold: {index} ===")
     X_train, X_test = X.iloc[train_index].values, X.iloc[test_index].values
     y_train, y_test = y.iloc[train_index].values, y.iloc[test_index].values
 
+    # X_train, X_test = X.iloc[train_index], X.iloc[test_index]
+    # y_train, y_test = y.iloc[train_index], y.iloc[test_index]
+
     for n_estimators in n_estimators_range:
+        percentage = (n_estimators / n_estimators_range[-1])
+        print(f"    {percentage:.2%}", end="\r")
         clf = AdaBoost(n_estimators)
+        # clf = AdaBoostClassifier(n_estimators=n_estimators)
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)

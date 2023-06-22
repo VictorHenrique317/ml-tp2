@@ -2,13 +2,13 @@ use pyo3::prelude::*;
 
 /// Representa um dado, com suas features, label, e seu peso.
 /// As features são representadas por um vetor de inteiros, e o label só pode ser
-/// 1 ou 0.
+/// 1 ou -1.
 #[derive(Clone, Debug)]
 #[pyclass]
 pub struct Sample {
     /// Vetor de features X do dado.
     pub features: Vec<i64>,
-    /// Label y do dado, que só pode ser 1 ou 0.
+    /// Label y do dado, que só pode ser 1 ou -1.
     pub label: i64,
     /// Peso do dado.
     weight: f64,
@@ -26,8 +26,8 @@ impl Sample {
     /// Novo dado.
     #[new]
     pub fn new(features: Vec<i64>, label: i64, weight: f64) -> Sample {
-        if label != 0 && label != 1 {
-            panic!("Label must be 0 or 1");
+        if label != -1 && label != 1 {
+            panic!("Label must be -1 or 1");
         }
         Sample { features, label, weight }
     }

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["AdaBoost","Representa o algoritmo AdaBoost que usa como classificadores fracos decision stumps."]]};

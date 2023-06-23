@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"struct":[["WeightedData","Guarda o conjunto de samples, que são os dados com seus pesos e labels."]]};

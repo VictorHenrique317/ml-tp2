@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":[["WeakLearner","Representa um classificador fraco, no caso um decision stump. Escolhi os decision stumps pois foram eles que foram utilizados na aula de boosting, além disso eles são bastante simples."]]};

@@ -1,4 +1,3 @@
-from sklearn.ensemble import AdaBoostClassifier
 from adaboost_bindings import AdaBoost # type: ignore
 import numpy as np
 from sklearn.metrics import accuracy_score

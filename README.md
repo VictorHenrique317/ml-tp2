@@ -15,7 +15,7 @@ através do comando 'cargo doc'.
 A página se encontra em: https://victorhenrique317.github.io/ml-tp2/adaboost_bindings/index.html.
 
 ## Análises de erro.
-Realizei minha análise de erros da seguinte maneira: para cada valor de taxa de aprendizado no intervalo [0.5, 1.0, 1.5, 2.0], plotei um gráfico mostrando a Acurácia Simples em função do número de classificadores fracos (iterações). Os valores de acurácia foram registrados seguindo uma metodologia de validação cruzada com 5 partições.
+Realizei minha análise de erros da seguinte maneira: para cada valor de taxa de aprendizado no intervalo [0.5, 1.0, 1.5, 2.0], plotei um gráfico mostrando a acurácia simples em função do número de classificadores fracos (iterações). Os valores de acurácia foram registrados seguindo uma metodologia de validação cruzada com 5 partições.
 
 Com isso, foi possível observar como o número de classificadores fracos e a taxa de aprendizado influenciam na convergência do algoritmo.
 

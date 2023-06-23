@@ -48,7 +48,7 @@ impl WeakLearner {
     /// incorretamente. Essa busca é exaustiva e testa todas as features com todos os valores possíveis.
     /// 
     /// Ao final o erro do classificador e o alpha são calculados. O alpha é definido como 
-    /// learning_rate * ln((1 - error) / error), onde learning_rate é um hiperparâmetro que regula a 
+    /// learning_rate * log_10((1 - error) / error), onde learning_rate é um hiperparâmetro que regula a 
     /// velocidade com que o boosting convergirá. Quanto maior o learning_rate maior vai ser a diferença
     /// entre os pesos das samples classificadas corretamente e incorretamente na hora de atualizar os pesos.
     /// 

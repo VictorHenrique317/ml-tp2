@@ -106,9 +106,36 @@
 <span id="106">106</span>
 <span id="107">107</span>
 <span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::vec::Vec;
 <span class="kw">use </span><span class="kw">crate</span>::weighted_data::WeightedData;
-<span class="kw">use </span><span class="kw">crate</span>::sample::Sample;
 <span class="kw">use </span>pyo3::prelude::<span class="kw-2">*</span>;
 
 <span class="doccomment">/// Representa um classificador fraco, no caso um decision stump. Escolhi os decision stumps
@@ -118,32 +145,52 @@
 </span><span class="kw">pub struct </span>WeakLearner {
     <span class="doccomment">/// Indice da feature que será utilizada como critério de decisão.
     </span><span class="kw">pub </span>feature_index: usize,
-    <span class="kw">pub </span>feature_target_value: i64,
-    <span class="kw">pub </span>prediction: i64,
+    <span class="doccomment">/// Valor da feature que será utilizado como critério de decisão.
+    </span><span class="kw">pub </span>feature_target_value: i64,
+    <span class="doccomment">/// Predição do classificador fraco, pode ser 1 ou -1.
+    </span><span class="kw">pub </span>prediction: i64,
 
+    <span class="doccomment">/// Taxa de aprendizado do classificador fraco.
+    </span><span class="kw">pub </span>learning_rate: f64,
     <span class="doccomment">/// Erro do classificador fraco.
     </span><span class="kw">pub </span>error: f64,
-    <span class="doccomment">/// Peso do classificador fraco.
+    <span class="doccomment">/// Importância (alpha) do classificador fraco.
     </span><span class="kw">pub </span>alpha: f64,
 }
 
 <span class="attribute">#[pymethods]
 </span><span class="kw">impl </span>WeakLearner {
     <span class="doccomment">/// Cria um novo classificador fraco vazio, incapaz de classificar qualquer dado.
+    /// 
     /// # Returns
     /// Novo classificador fraco.
     </span><span class="attribute">#[new]
-    </span><span class="kw">pub fn </span>new() -&gt; WeakLearner {
+    </span><span class="kw">pub fn </span>new(learning_rate: f64) -&gt; WeakLearner {
         WeakLearner {
             feature_index: usize::MAX,
             feature_target_value: <span class="number">0</span>,
             prediction: <span class="number">0</span>,
+            learning_rate: learning_rate,
             error: <span class="number">0.0</span>,
             alpha: <span class="number">0.0</span>,
         }
     }
 
-    <span class="kw">pub fn </span>fit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, weighted_data: WeightedData) {
+    <span class="doccomment">/// Treina o classificador fraco com um conjunto de samples.
+    /// O classificador fraco é treinado escolhendo a feature e o valor da feature que minimizam
+    /// o erro ao se fazer a predição (positiva ou negativa) levando somente isso em consideração. 
+    /// 
+    /// O erro de classificação  é definido como a soma dos pesos das samples que foram classificadas 
+    /// incorretamente. Essa busca é exaustiva e testa todas as features com todos os valores possíveis.
+    /// 
+    /// Ao final o erro do classificador e o alpha são calculados. O alpha é definido como 
+    /// learning_rate * ln((1 - error) / error), onde learning_rate é um hiperparâmetro que regula a 
+    /// velocidade com que o boosting convergirá. Quanto maior o learning_rate maior vai ser a diferença
+    /// entre os pesos das samples classificadas corretamente e incorretamente na hora de atualizar os pesos.
+    /// 
+    /// # Arguments
+    /// * `weighted_data` - Conjunto de samples.
+    </span><span class="kw">pub fn </span>fit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, weighted_data: WeightedData) {
         <span class="kw">let </span>n_features = weighted_data.samples[<span class="number">0</span>].features.len();
         <span class="kw">let </span><span class="kw-2">mut </span>min_error = f64::INFINITY;
 
@@ -196,11 +243,20 @@
         }
 
         <span class="self">self</span>.error = weighted_data.computeWeightedErrorRate(<span class="kw-2">&amp;</span><span class="self">self</span>);
-        <span class="self">self</span>.alpha = <span class="number">0.5 </span>* ((<span class="number">1.0 </span>- <span class="self">self</span>.error)/ <span class="self">self</span>.error).log10();
+        <span class="self">self</span>.alpha = <span class="self">self</span>.learning_rate * ((<span class="number">1.0 </span>- <span class="self">self</span>.error)/ <span class="self">self</span>.error).log10();
     }
 
-    
-    <span class="kw">pub fn </span>predict(<span class="kw-2">&amp;</span><span class="self">self</span>, features: Vec&lt;i64&gt;) -&gt; i64 {
+    <span class="doccomment">/// Faz a classificação de um dado com base no valor da feature definido
+    /// no treinamento. A predição é feita com base na votação de diferentes classificadores fracos,
+    /// sendo o valor final -1 se a soma das diferentes predições ponderadas por alpha for negativa
+    /// e 1 caso contrário.
+    /// 
+    /// # Arguments
+    /// * `features` - Features do dado a ser classificado.
+    /// 
+    /// # Panics
+    /// Se o classificador fraco não foi treinado.
+    </span><span class="kw">pub fn </span>predict(<span class="kw-2">&amp;</span><span class="self">self</span>, features: Vec&lt;i64&gt;) -&gt; i64 {
         <span class="kw">if </span><span class="self">self</span>.feature_index == usize::MAX{
             <span class="macro">panic!</span>(<span class="string">&quot;WeakLearner not trained&quot;</span>);
         }

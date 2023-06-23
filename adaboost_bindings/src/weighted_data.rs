@@ -3,7 +3,6 @@ use crate::weak_learner::WeakLearner;
 use crate::sample::Sample;
 use pyo3::prelude::*;
 
-
 /// Guarda o conjunto de samples, que são os dados com seus pesos e labels.
 #[pyclass]
 #[derive(Clone)]

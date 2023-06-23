@@ -1,6 +1,6 @@
 use std::vec::Vec;
-use numpy::ndarray::{Array2, Axis, Array1};
-use numpy::{PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyArray1};
+use numpy::ndarray::{Array2, Axis};
+use numpy::{PyReadonlyArray1, PyReadonlyArray2, PyArray1};
 use crate::sample::Sample;
 use crate::weak_learner::WeakLearner;
 use crate::weighted_data::WeightedData;
@@ -9,6 +9,7 @@ use pyo3::prelude::*;
 /// Representa o algoritmo AdaBoost que usa como classificadores fracos decision stumps.
 #[pyclass]
 pub struct AdaBoost {
+    /// Taxa de aprendizado do algoritmo.
     pub learning_rate: f64,
     /// Número de classificadores fracos usados para fazer a predição.
     pub n_estimators: usize,
@@ -22,6 +23,10 @@ impl AdaBoost {
     /// 
     /// # Arguments
     /// * `n_estimators` - Número de classificadores fracos usados para fazer a predição.
+    /// * `learning_rate` - Taxa de aprendizado do algoritmo, quanto maior o valor, mais
+    ///                     rápido o algoritmo converge. Uma explicação mais detalhada do 
+    ///                     learning_rate pode ser encontrada na documentação da classe 
+    ///                     WeakLearner.
     /// 
     /// # Returns
     /// Novo algoritmo AdaBoost.
@@ -87,7 +92,7 @@ impl AdaBoost {
 
     /// Faz a predição com base em um array numpy. Como no algoritmo clássico a predição é
     /// feita com base na votação de diferentes classificadores fracos, sendo o valor final
-    /// 0 se a soma das diferentes predições ponderadas por alpha for negativa e 1 caso contrário.
+    /// -1 se a soma das diferentes predições ponderadas por alpha for negativa e 1 caso contrário.
     /// 
     /// # Arguments
     /// * `x` - Array numpy com as features.

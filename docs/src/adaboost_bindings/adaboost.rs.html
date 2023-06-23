@@ -108,9 +108,16 @@
 <span id="108">108</span>
 <span id="109">109</span>
 <span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::vec::Vec;
-<span class="kw">use </span>numpy::ndarray::{Array2, Axis, Array1};
-<span class="kw">use </span>numpy::{PyArray2, PyReadonlyArray1, PyReadonlyArray2, PyArray1};
+<span class="kw">use </span>numpy::ndarray::{Array2, Axis};
+<span class="kw">use </span>numpy::{PyReadonlyArray1, PyReadonlyArray2, PyArray1};
 <span class="kw">use </span><span class="kw">crate</span>::sample::Sample;
 <span class="kw">use </span><span class="kw">crate</span>::weak_learner::WeakLearner;
 <span class="kw">use </span><span class="kw">crate</span>::weighted_data::WeightedData;
@@ -119,6 +126,8 @@
 <span class="doccomment">/// Representa o algoritmo AdaBoost que usa como classificadores fracos decision stumps.
 </span><span class="attribute">#[pyclass]
 </span><span class="kw">pub struct </span>AdaBoost {
+    <span class="doccomment">/// Taxa de aprendizado do algoritmo.
+    </span><span class="kw">pub </span>learning_rate: f64,
     <span class="doccomment">/// Número de classificadores fracos usados para fazer a predição.
     </span><span class="kw">pub </span>n_estimators: usize,
     <span class="doccomment">/// Classificadores fracos usados para fazer a predição.
@@ -131,12 +140,17 @@
     /// 
     /// # Arguments
     /// * `n_estimators` - Número de classificadores fracos usados para fazer a predição.
+    /// * `learning_rate` - Taxa de aprendizado do algoritmo, quanto maior o valor, mais
+    ///                     rápido o algoritmo converge. Uma explicação mais detalhada do 
+    ///                     learning_rate pode ser encontrada na documentação da classe 
+    ///                     WeakLearner.
     /// 
     /// # Returns
     /// Novo algoritmo AdaBoost.
     </span><span class="attribute">#[new]
-    </span><span class="kw">pub fn </span>new(n_estimators: usize) -&gt; AdaBoost {
+    </span><span class="kw">pub fn </span>new(n_estimators: usize, learning_rate: f64) -&gt; AdaBoost {
         AdaBoost {
+            learning_rate: learning_rate,
             n_estimators,
             weak_learners: Vec::new(),
         }
@@ -172,7 +186,7 @@
 
         <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.n_estimators {
             
-            <span class="kw">let </span><span class="kw-2">mut </span>weak_learner = WeakLearner::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>weak_learner = WeakLearner::new(<span class="self">self</span>.learning_rate);
             weak_learner.fit(weighted_data.clone());
 
             weighted_data.updateWeights(<span class="kw-2">&amp;</span>weak_learner);
@@ -195,7 +209,7 @@
 
     <span class="doccomment">/// Faz a predição com base em um array numpy. Como no algoritmo clássico a predição é
     /// feita com base na votação de diferentes classificadores fracos, sendo o valor final
-    /// 0 se a soma das diferentes predições ponderadas por alpha for negativa e 1 caso contrário.
+    /// -1 se a soma das diferentes predições ponderadas por alpha for negativa e 1 caso contrário.
     /// 
     /// # Arguments
     /// * `x` - Array numpy com as features.
